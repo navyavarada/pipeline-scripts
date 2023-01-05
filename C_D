@@ -1,0 +1,47 @@
+pipeline {
+agent any
+stages{
+stage("Verification"){
+steps{
+script{
+echo "${params.Deploy}"
+echo "${params.Branch}"
+echo "${params.Environment}"
+}
+}
+}
+stage("Deploy"){
+//when{
+//expression {params.Deploy == true && params.Branch == "master"}
+//}
+  steps{
+  script{
+    sh 'ssh root@172.31.31.25 /opt/tomcat/bin/shutdown.sh'
+	sh 'scp -r /var/lib/jenkins/workspace/Continuous_Integration/target/citibank.war root@172.31.31.25:/opt/tomcat/webapps/'
+	sh 'ssh root@172.31.31.25 /opt/tomcat/bin/startup.sh'
+	echo "Deployment completed"
+  }
+  }
+
+  post
+  {
+  success{
+    mail to: 'navya.varada3@gmail.com',
+    subject: "Job '${JOB_NAME}' (${BUILD_NUMBER}) is success",
+    body: "Please go to ${BUILD_URL} and verify the build is success or not"
+	}
+  failure{
+    mail to: 'navya.varada3@gmail.com',
+    subject: "Job '${JOB_NAME}' (${BUILD_NUMBER}) is failed",
+    body: "Please go to ${BUILD_URL} and verify the build"
+ }
+  always{
+    mail to: 'navya.varada3@gmail.com',
+    subject: "Job '${JOB_NAME}' (${BUILD_NUMBER}) is always",
+    body: "Please go to ${BUILD_URL} and this is always"
+}
+}
+}
+}
+}
+

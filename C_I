@@ -1,0 +1,60 @@
+pipeline{
+agent any
+parameters {
+  choice choices: ['master', 'develop'], description: 'please select the branch', name: 'Branch'
+  booleanParam description: 'Please select to deploy the project on master', name: 'Deploy'
+  string description: 'Please select the environment', name: 'Environment'
+
+}
+stages{
+  stage("GitHub or Cloning"){
+    steps{
+	script{
+	echo "Cloning started"
+	git branch: '$Branch', credentialsId: 'Git_credentials', url: 'https://github.com/navyavarada/citibank.git'
+	echo "Cloning completed"
+	}
+  }
+ }
+ stage("maven")
+ {
+ steps{
+ script{
+	echo "started converting into package"
+    sh 'mvn clean package'
+	echo "package converted"
+   }
+ }
+}
+stage("Sonar-Scanner"){
+  steps{
+   script{
+  echo "Scanning started"
+  
+  echo "Scanning completed"
+  }
+  }
+}
+stage("Sonar-Qubes"){
+  steps{
+  script{
+  echo "Qube started"
+  
+  echo "Qube completed"
+  }
+  }
+}
+stage("Calling CD job")
+{
+steps{
+script{
+ build job: 'Continuous_Deployment', parameters: [
+      string(name: 'Branch', value:"${params.Branch}"),
+      string(name:'Deploy', value: "${params.Deploy}"),
+	  string(name:'Environment', value: "${params.Environment}")
+	  ]
+	  }
+	  }
+}
+}
+}
